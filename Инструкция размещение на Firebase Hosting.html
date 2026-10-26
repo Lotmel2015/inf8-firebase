@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Инструкция: размещение курса на Firebase Hosting</title>
+<style>
+:root{
+  --bg:#F4F7F2; --ink:#173B34; --muted:#5E6D68; --accent:#0E8A5F; --line:#D7E4DC; --alarm:#9A6700;
+  --mono:"SF Mono",Consolas,"DejaVu Sans Mono",monospace;
+  --sans:-apple-system,"Segoe UI","Noto Sans","DejaVu Sans",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
+.page{max-width:940px;margin:0 auto;padding:36px 22px 80px}
+.muted{color:var(--muted)}.accent{color:var(--accent)}.alarm{color:var(--alarm)}
+.mono{font-family:var(--mono);font-size:.9em}
+.hero{border:1px solid var(--line);border-top:4px solid var(--accent);background:#fff;padding:26px 28px;border-radius:8px}
+.hero .kicker{text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700;color:var(--muted);margin:0 0 8px}
+.hero h1{margin:0 0 10px;font-size:26px;line-height:1.25}
+.hero .why{color:var(--muted);margin:0 0 18px}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.num{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.num b{display:block;font-size:20px;color:var(--accent);font-family:var(--mono)}
+.num span{font-size:12.5px;color:var(--muted)}
+h2{font-size:20px;margin:44px 0 4px;padding-top:18px;border-top:1px solid var(--line)}
+h2 .n{color:var(--accent);font-family:var(--mono);margin-right:8px}
+.lead{color:var(--muted);margin:0 0 18px;font-size:15px}
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps>li{counter-increment:s;margin:0 0 16px;padding:16px 18px 14px 56px;position:relative;background:#fff;border:1px solid var(--line);border-radius:8px;break-inside:avoid}
+ol.steps>li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border:1.5px solid var(--accent);color:var(--accent);border-radius:50%;font-family:var(--mono);font-size:15px;font-weight:700;text-align:center;line-height:26px}
+ol.steps>li b{display:block;font-size:15.5px;margin-bottom:4px}
+ol.steps>li .why{display:block;color:var(--muted);font-size:13.5px;margin-top:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink)}
+pre{background:#173B34;color:#EAF4EF;font-family:var(--mono);font-size:13.5px;line-height:1.55;border-radius:8px;padding:14px 16px;overflow-x:auto;margin:10px 0}
+pre .c{color:#8FBEAA}
+table{width:100%;border-collapse:collapse;margin:12px 0;background:#fff;font-size:14.5px;break-inside:avoid}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.warn{background:#FFF9EC;border:1px solid #F0DFB4;border-left:4px solid var(--alarm);border-radius:6px;padding:12px 16px;margin:14px 0;font-size:14.5px}
+.warn b{color:var(--alarm)}
+.reco{background:#EFFAF3;border:1px solid #BCE6CE;border-radius:6px;padding:10px 14px;font-size:14.5px;margin:10px 0}
+.reco b{color:var(--accent)}
+.footer{margin-top:52px;border-top:2px solid var(--ink);padding-top:14px;font-size:13px;color:var(--muted)}
+.footer b{color:var(--ink)}
+@media (max-width:640px){ol.steps>li{padding-left:48px}}
+@media print{body{background:#fff}.page{padding:8mm 0}ol.steps>li,table{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hero">
+  <p class="kicker">Инструкция для учителя · Firebase Hosting</p>
+  <h1>Как разместить курс на Firebase Hosting</h1>
+  <p class="why">Пошагово: создать проект Firebase, подключить курс к Firestore (обезличенно, по коду ученика), задеплоить на бесплатный хостинг Firebase и открыть ссылку ученикам. Подходит для учителя без глубокого опыта в веб-разработке.</p>
+  <div class="nums">
+    <div class="num"><b>0 ₽</b><span>бесплатный тариф Spark</span></div>
+    <div class="num"><b>≈ 30 мин</b><span>от нуля до рабочей ссылки</span></div>
+    <div class="num"><b>Без ФИО</b><span>ученик входит по личному коду</span></div>
+    <div class="num"><b>Нужен</b><span>Node.js 18+ · аккаунт Google · GitHub</span></div>
+  </div>
+</div>
+
+<div class="warn"><b>Важное ограничение (повторяем из плана):</b> Firebase и консоль Google из РФ работают нестабильно из-за блокировок. Перед началом убедитесь, что <code>console.firebase.google.com</code> открывается с вашего интернета. Если нет — курс всё равно работает локально, просто без онлайн-сбора.</div>
+
+<h2><span class="n">0</span>Что понадобится</h2>
+<table>
+  <tr><th>Инструмент</th><th>Зачем</th><th>Где взять</th></tr>
+  <tr><td><b>Аккаунт Google</b></td><td>Создание проекта Firebase</td><td>Свой, уже есть</td></tr>
+  <tr><td><b>GitHub-аккаунт (Lotmel2015)</b></td><td>Репозиторий с курсом уже создан: <code>github.com/Lotmel2015/inf8-firebase</code></td><td>Есть, gh авторизован</td></tr>
+  <tr><td><b>Node.js 18+</b></td><td>Установка Firebase CLI</td><td>nodejs.org (в этой настройке не установлен — скачайте)</td></tr>
+  <tr><td><b>Браузер</b></td><td>Консоль Firebase</td><td>Любой</td></tr>
+</table>
+
+<h2><span class="n">1</span>Создать проект Firebase</h2>
+<ol class="steps">
+  <li><b>Открой консоль Firebase и войди в аккаунт Google</b>
+    <span class="why">Адрес: <code>console.firebase.google.com</code>. Если просит войти — войди в свой Google-аккаунт.</span></li>
+  <li><b>Нажми «Создать проект»</b>
+    <span class="why">Название проекта, например <code>inf8-progress</code>. Отображаемое имя можно менять; технический projectId менять нельзя — запиши его (пригодится в шаге 6).</span></li>
+  <li><b>Аналитику для этого проекта можно НЕ включать</b>
+    <span class="why">Для курса она не нужна, а отключённая упрощает согласование с учителем по персональным данным.</span></li>
+  <li><b>Дождись создания и нажми «Продолжить»</b>
+    <span class="why">Проект появится в списке. Слева появится меню — нам понадобятся разделы «Firestore Database» и «Hosting».</span></li>
+</ol>
+
+<h2><span class="n">2</span>Создать базу Firestore</h2>
+<ol class="steps">
+  <li><b>Слева выбери «Firestore Database» → «Создать базу данных»</b></li>
+  <li><b>Регион: выбери ближайший к тебе (например <code>europe-west1</code> — Бельгия)</b>
+    <span class="why">Регион менять потом нельзя. Для школы подойдёт европейский; латентность не критична.</span></li>
+  <li><b>Режим: выбери «Режим ограниченного доступа» (не «тестовый»)</b>
+    <span class="why">Тестовый режим открывает базу всем на 30 дней — этого нельзя. Ограниченный — закрывает всё по умолчанию.</span></li>
+  <li><b>Дождись создания базы (несколько секунд)</b></li>
+</ol>
+
+<h2><span class="n">3</span>Настроить правила Firestore (защита)</h2>
+<ol class="steps">
+  <li><b>В разделе «Firestore Database» открой вкладку «Правила»</b></li>
+  <li><b>Вставь эти правила вместо стандартных</b>
+<pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /progress/{code}/out/{task} {
+      allow read: if request.auth == null
+          &amp;&amp; code.matches('^[A-Z0-9-]{4,10}$');
+      allow create: if request.auth == null
+          &amp;&amp; request.resource.data.code == code
+          &amp;&amp; code.matches('^[A-Z0-9-]{4,10}$');
+      allow update: if request.auth == null
+          &amp;&amp; request.resource.data.code == code
+          &amp;&amp; code.matches('^[A-Z0-9-]{4,10}$');
+      allow delete: if false;
+    }
+  }
+}</pre>
+    <span class="why">Курс пишет результаты в подколлекцию <code>progress/{код}/out/{урок.задание}</code> (документ = одно задание). Поэтому правило объявлено именно для <code>/out/{task}</code>: правила родительского документа на подколлекции не распространяются. При создании/обновлении проверяем, что поле <code>code</code> внутри документа совпадает с кодом из пути — чужие записи изменить нельзя. Читать можно только свою подколлекцию. Удаление запрещено.</span></li>
+  <li><b>Нажми «Опубликовать»</b>
+    <span class="why">Если правила не применились — проверь, что база в режиме ограниченного доступа (шаг 2).</span></li>
+</ol>
+
+<h2><span class="n">4</span>Добавить веб-приложение и получить ключи</h2>
+<ol class="steps">
+  <li><b>В настройках проекта (шестерёнка) → «Настройки проекта» → вкладка «Ваши приложения»</b></li>
+  <li><b>Выбери «Веб-приложение» (значок <code>&lt;/&gt;</code>)</b>
+    <span class="why">Название приложения, например <code>course-web</code>.</span></li>
+  <li><b>Скопируй объект firebaseConfig — он понадобится в шаге 6</b>
+<pre>{ "apiKey": "AIza...", "authDomain": "inf8-progress.firebaseapp.com",
+  "projectId": "inf8-progress", ... }</pre>
+    <span class="why">Внимание: <code>apiKey</code> из клиентского кода — не секрет (Firebase это документирует). Защита держится на правилах из шага 3, а не на ключе.</span></li>
+</ol>
+
+<h2><span class="n">5</span>Разместить курс на GitHub (уже сделано)</h2>
+<ol class="steps">
+  <li><b>Репозиторий создан автоматически: <code>github.com/Lotmel2015/inf8-firebase</code></b>
+    <span class="why">В нём — файл курса «Онлайн курс информатики 8 класс.html». Это страница-приложение: её же будем деплоить на Firebase.</span></li>
+  <li><b>Как обновлять курс позже:</b>
+    <span class="why">После изменения файла просто коммитим и пушим (если настроено) — инструкция в шаге 8.</span></li>
+</ol>
+
+<h2><span class="n">6</span>Вставить ключи Firebase в курс</h2>
+<ol class="steps">
+  <li><b>Скачай последнюю версию курса из GitHub</b>
+    <span class="why">Открой репозиторий → файл «Онлайн курс информатики 8 класс.html» → кнопка «Download raw file» (скачать). Сохрани рядом с собой, например в папку <code>C:\inf8-course</code>.</span></li>
+  <li><b>Открой файл в текстовом редакторе (Блокнот, VS Code)</b></li>
+  <li><b>Найди блок конфигурации и замени <code>REPLACE_ME</code> своими значениями</b>
+<pre>var FIREBASE_CONFIG = {
+  apiKey: "AIza...",
+  projectId: "inf8-progress",
+  authDomain: "inf8-progress.firebaseapp.com"
+};</pre>
+    <span class="why">Значения — из firebaseConfig в шаге 4. Не удаляй кавычки и запятые: иначе курс перестанет запускаться.</span></li>
+  <li><b>Сохрани файл</b></li>
+</ol>
+
+<h2><span class="n">7</span>Установить Firebase CLI и задеплоить</h2>
+<ol class="steps">
+  <li><b>Установи Node.js 18+</b>
+    <span class="why">Скачай и установи с nodejs.org (LTS). После установки перезапусти терминал.</span></li>
+  <li><b>Открой терминал (PowerShell) в папке с курсом</b>
+<pre>cd C:\inf8-course</pre></li>
+  <li><b>Установи Firebase CLI</b>
+<pre>npm install -g firebase-tools</pre></li>
+  <li><b>Войди в Google-аккаунт (откроется браузер)</b>
+<pre>firebase login</pre></li>
+  <li><b>Инициализируй хостинг в папке курса</b>
+<pre>firebase init hosting</pre>
+    <span class="why">Отвечай: использовать существующий проект <code>inf8-progress</code> → Да; public directory: <code>.</code>; одностраничное приложение (SPA): <code>N</code> (у курса свои хэш-роуты, редирект не нужен). Создавать файлы по умолчанию — можно согласиться.</span></li>
+  <li><b>Задеплой</b>
+<pre>firebase deploy --only hosting</pre>
+    <span class="why">В конце появится URL вида <code>https://inf8-progress.web.app</code> — это и есть адрес курса.</span></li>
+</ol>
+
+<h2><span class="n">8</span>Проверить и раздать ссылку</h2>
+<ol class="steps">
+  <li><b>Открой URL курса (например <code>https://inf8-progress.web.app</code>) в браузере</b></li>
+  <li><b>Проверь вход ученика по коду</b>
+    <span class="why">Вкладка «Ученик» → личный код (например <code>X7-K2P</code>) + класс. Без ФИО.</span></li>
+  <li><b>Реши пару заданий, затем открой «Мой прогресс»</b>
+    <span class="why">Данные должны подтянуться из Firestore (нужен доступ к интернету).</span></li>
+  <li><b>Проверь со стороны учителя: в консоли Firebase → Firestore → коллекция <code>progress</code></b>
+    <span class="why">Видны документы с кодом и баллами; ФИО там нет. Это и есть обезличенная схема.</span></li>
+  <li><b>Раздай ученикам ссылку и личные коды</b>
+    <span class="why">Коды — уникальные (например <code>A8-101</code>, <code>A8-102</code>…), раздавай лично. Учитель ведёт таблицу «код → ФИО» у себя.</span></li>
+</ol>
+
+<div class="reco"><b>Готово.</b> Курс открывается по ссылке, результаты собираются в Firestore под обезличенными кодами, учитель видит прогресс в консоли Firebase. Чтобы обновить курс позже: измени файл, снова <code>firebase deploy --only hosting</code>.</div>
+
+<div class="warn"><b>Если на шаге 7 что-то не работает из-за блокировок:</b> Firebase CLI при первом входе открывает страницу Google. Если она не открывается — используйте вариант с VPS (см. план «План отслеживания прогресса учеников.html»): он работает из РФ стабильно.</div>
+
+<h2>Типичные ошибки</h2>
+<table>
+  <tr><th>Проблема</th><th>Причина и решение</th></tr>
+  <tr><td>«URL не открывается»</td><td>Проверь, что деплой завершился (вывод об успехе), и что набран точный URL <code>.web.app</code>.</td></tr>
+  <tr><td>«Ошибка Firebase initialization: no matching project»</td><td>Выбери существующий проект при <code>firebase init hosting</code> — проект из шага 1.</td></tr>
+  <tr><td>«Мой прогресс» пустой</td><td>Проверь доступ к интернету; проверь, что ключи вставлены (шаг 6); проверь правила (шаг 3) — allow create/read по коду.</td></tr>
+  <tr><td>«Синхронизация не настроена» на странице «Мой прогресс»</td><td>Ключи всё ещё <code>REPLACE_ME</code> — вставь свои из шага 4, пересохрани, передеплой.</td></tr>
+  <tr><td>Вход не принимает код</td><td>Код — 4–10 латинских букв/цифр/дефисов, верхний регистр. Пример: <code>X7-K2P</code>.</td></tr>
+</table>
+
+<h2>Что можно сделать ещё</h2>
+<ul class="muted" style="font-size:14.5px;line-height:1.7">
+  <li>Вести таблицу учителя «код → ФИО» в Excel и сопоставлять с данными консоли.</li>
+  <li>Экспортировать результаты в CSV (скрипт admin из плана Firebase) для электронного журнала.</li>
+  <li>Привязать свой домен (например <code>inf8.myschool.ru</code>) в Hosting → «Подключить домен».</li>
+</ul>
+
+<div class="footer">
+  <b>Проверено:</b> настройка на 26.10.2026. Node.js на этом ПК отсутствует — установите с nodejs.org перед шагом 7. GitHub-репозиторий создан: github.com/Lotmel2015/inf8-firebase. Ключи Firebase не вставлены — их нужно добавить вручную (шаг 6), это безопаснее, чем публиковать их в открытом репозитории.
+</div>
+
+</div>
+</body>
+</html>
