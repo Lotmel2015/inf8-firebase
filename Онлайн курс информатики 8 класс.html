@@ -763,9 +763,9 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       }).join(' · ');
       var last = esc(s.updated || "—");
       var streak = (st.days && st.days.count) || 0;
-      var name = !(st.name || s.name) || (st.name || s.name) === (s.name || "") ? s.name : s.name;
+      var name = s.name;
       return '<tr>' +
-        '<td>' + esc(s.name) + '</td>' +
+        '<td>' + esc(name) + '</td>' +
         '<td>' + esc(s.cls) + '</td>' +
         '<td>' + sts.solved + ' / ' + TOTAL + '</td>' +
         '<td>' + sts.pct + '%</td>' +
@@ -789,9 +789,12 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
         '<div class="rep-card"><b>' + avgGrade + ' / 9</b><span>средняя оценка</span></div>' +
         '<div class="rep-card"><b>' + activeToday(loaded) + '</b><span>активных сегодня</span></div>' +
       '</div>' +
+      '<div class="card" style="margin-top:14px"><h3>Из Firebase (все ПК)</h3>' +
+        '<div id="fb-admin-box"><p class="note">Загружаем…</p></div>' +
+      '</div>' +
       (clsRows ? '<div class="card"><h3>Сводка по классам</h3><div class="table-wrap"><table class="plan-table">' +
         '<thead><tr><th>Класс</th><th>Учеников</th><th>Средний прогресс</th><th>Средняя оценка</th></tr></thead><tbody>' + clsRows + '</tbody></table></div></div>' : '') +
-      '<div class="card" style="margin-top:14px"><h3>Подробные результаты</h3>' +
+      '<div class="card" style="margin-top:14px"><h3>Подробные результаты (локальные)</h3>' +
         '<input type="search" id="admin-filter" placeholder="Поиск по имени или классу" aria-label="Поиск ученика" style="width:100%;margin:8px 0 10px">' +
         '<div class="table-wrap"><table class="plan-table">' +
         '<thead><tr><th>Ученик</th><th>Класс</th><th>Решено</th><th>Прогресс</th><th>Оценка</th><th>Уровень</th><th>Серия</th><th>Обновлено</th></tr></thead>' +
@@ -1037,6 +1040,8 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     }
     var adminLink = document.querySelector(".mainnav a[href=\"#/admin\"]");
     if (adminLink) adminLink.style.display = IS_ADMIN ? "" : "none";
+    var reportLink = document.querySelector(".mainnav a[href=\"#/report\"]");
+    if (reportLink) reportLink.style.display = IS_ADMIN ? "" : "none";
   }
 
   function setNav(name) {
@@ -1680,12 +1685,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
         (weekDone >= WEEK_GOAL ? '<b style="color:var(--i)">выполнена</b>' : 'ещё ' + (WEEK_GOAL - weekDone)) + '.</p></div>' +
       '<div class="card" style="margin-top:14px"><h3>Оценки по модулям</h3>' +
         '<div class="table-wrap"><table class="plan-table"><thead><tr><th>№</th><th>Модуль</th><th>Решено</th><th>Оценка</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
-      '<div class="card" style="margin-top:14px"><h3>Данные (JSON)</h3>' +
-        '<textarea id="report-json" rows="10" style="width:100%;font:13px/1.5 ui-monospace,Consolas,monospace;border:1px solid var(--line);border-radius:10px;padding:10px">' + esc(JSON.stringify(tt, null, 1)) + '</textarea>' +
-        '<div class="train-foot" style="margin-top:10px">' +
-        '<button class="btn" data-act="copy-json">Скопировать</button>' +
-        '<button class="btn primary" data-act="print">Печать</button></div>' +
-      '</div></div>';
+      '</div>';
   }
 
   /* ── экран: все задания ────────────────────── */
@@ -1807,6 +1807,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     if (p[0] === "test") return { name: "test" };
     if (p[0] === "vpr") return { name: "vpr", id: p[1] || "" };
     if (p[0] === "report") return { name: "report" };
+    if (p[0] === "admin") return { name: "admin" };
     if (p[0] === "certificate") return { name: "certificate" };
     if (p[0] === "tasks") return { name: "tasks" };
     if (p[0] === "plan") return { name: "plan" };
@@ -1826,6 +1827,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       renderSide(null);
       paintHeader();
       window.scrollTo(0, 0);
+      try { loadAdminFB(); } catch (e) {}
       return;
     }
     if (IS_ADMIN && !r.name) {
@@ -1856,7 +1858,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       html = viewVpr(); nav = "";
     }
     else if (r.name === "report") { html = viewReport(); nav = "report"; }
-    else if (r.name === "admin") { html = viewAdmin(); nav = "admin"; }
+    else if (r.name === "admin") { html = IS_ADMIN ? viewAdmin() : notFound(); nav = IS_ADMIN ? "admin" : ""; }
     else if (r.name === "progress") { html = viewMyProgress(); nav = "progress"; }
     else if (r.name === "certificate") { html = viewCertificate(); nav = ""; }
     else { html = viewLesson(r.id, r.tab); nav = ""; }
@@ -2318,6 +2320,48 @@ firstTry: 0, days: { last: "", count: 0, freeze: 0 }, week: { start: "", tasks: 
   }
 
   // «Мой прогресс» — сводка по коду из Firestore (анонимно)
+  function loadAdminFB() {
+    var box = document.getElementById("fb-admin-box");
+    if (!box) return;
+    if (!FB_CFG) { box.innerHTML = '<p class="note">Синхронизация не настроена (ключи не вставлены). Показываются только локальные профили этого ПК.</p>'; return; }
+    // Читаем всех учеников: коллекция progress (документы хранят агрегаты по кодам)
+    var url = "https://firestore.googleapis.com/v1/projects/" + FB_CFG.projectId +
+      "/databases/(default)/documents/progress?pageSize=300&key=" + FB_CFG.apiKey;
+    fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var docs = (j && j.documents) || [];
+      if (!docs.length) { box.innerHTML = '<p class="note">В Firebase пока нет данных.</p>'; return; }
+      // Каждый документ прогресса: код ученика, класс, оценки по заданиям
+      var byCode = {};
+      docs.forEach(function (d) {
+        var f = d.fields || {};
+        var code = (f.code && f.code.stringValue) || (d.name || "").split("/").pop();
+        var cls = (f.cls && f.cls.stringValue) || "";
+        if (!byCode[code]) byCode[code] = { code: code, cls: cls, rows: [] };
+        byCode[code].rows.push(d);
+      });
+      var codes = Object.keys(byCode);
+      var totalDocs = docs.length;
+      var rowsHtml = codes.map(function (c) {
+        var o = byCode[c];
+        var sums = o.rows.reduce(function (a, r) {
+          var f = r.fields || {};
+          a.solved++;
+          a.score += Number((f.score && (f.score.integerValue || f.score.doubleValue)) || 0);
+          return a;
+        }, { solved: 0, score: 0 });
+        var grade = sums.solved ? Math.round(sums.score / sums.solved) : 0;
+        return '<tr><td>' + esc(c) + '</td><td>' + esc(o.cls) + '</td><td>' + sums.solved + '</td><td>' + grade + ' / 9</td></tr>';
+      }).join("");
+      box.innerHTML = '<div class="table-wrap"><table class="plan-table">' +
+        '<thead><tr><th>Код</th><th>Класс</th><th>Заданий решено</th><th>Средняя оценка</th></tr></thead><tbody>' +
+        rowsHtml + '</tbody></table></div>' +
+        '<p class="note">Всего документов в Firebase: ' + totalDocs + ' · учеников по кодам: ' + codes.length +
+        '. Сопоставляйте коды со своей таблицей «код → ФИО».</p>';
+    }).catch(function () {
+      box.innerHTML = '<p class="note">Не удалось загрузить данные из Firebase. Проверьте доступ к интернету и ключи.</p>';
+    });
+  }
+
   function viewMyProgress() {
     return '<div class="view">' +
       '<div class="crumbs"><a href="#/map">Карта курса</a><span class="sep">/</span><span>Мой прогресс</span></div>' +

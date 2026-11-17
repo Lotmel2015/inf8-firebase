@@ -103,9 +103,9 @@ th{background:var(--bg);font-size:13px;text-transform:uppercase;letter-spacing:.
 <pre>rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Чтение всей коллекции — для кабинета учителя (данные обезличены: коды и баллы, без ФИО)
     match /progress/{code}/out/{task} {
-      allow read: if request.auth == null
-          &amp;&amp; code.matches('^[A-Z0-9-]{4,10}$');
+      allow read: if true;
       allow create: if request.auth == null
           &amp;&amp; request.resource.data.code == code
           &amp;&amp; code.matches('^[A-Z0-9-]{4,10}$');
@@ -116,7 +116,7 @@ service cloud.firestore {
     }
   }
 }</pre>
-    <span class="why">Курс пишет результаты в подколлекцию <code>progress/{код}/out/{урок.задание}</code> (документ = одно задание). Поэтому правило объявлено именно для <code>/out/{task}</code>: правила родительского документа на подколлекции не распространяются. При создании/обновлении проверяем, что поле <code>code</code> внутри документа совпадает с кодом из пути — чужие записи изменить нельзя. Читать можно только свою подколлекцию. Удаление запрещено.</span></li>
+    <span class="why">Курс пишет результаты в подколлекцию <code>progress/{код}/out/{урок.задание}</code> (документ = одно задание). Запись разрешена только владельцу кода. Чтение открыто для всех (только коды и баллы — персональных данных в базе нет), это нужно, чтобы учитель видел результаты всех учеников прямо в курсе, в разделе «Результаты».</span></li>
   <li><b>Нажми «Опубликовать»</b>
     <span class="why">Если правила не применились — проверь, что база в режиме ограниченного доступа (шаг 2).</span></li>
 </ol>
