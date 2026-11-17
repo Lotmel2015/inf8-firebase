@@ -465,6 +465,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     <a href="#/test" data-nav="test">Контроль</a>
     <a href="#/plan" data-nav="plan">Программа</a>
     <a href="#/report" data-nav="report">Отчёт</a>
+    <a href="#/admin" data-nav="admin" class="admin-only" style="display:none">Результаты</a>
     <a href="#/about" data-nav="about">О курсе</a>
   </nav>
   <div class="bar-right">
@@ -644,7 +645,9 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     IS_ADMIN = true;
     clearActive();
     KEY = "";
-    state = {};
+    state = { solved: {}, answers: {}, attempts: {}, visited: {}, theory: {},
+      firstTry: 0, days: { last: "", count: 0, freeze: 0 }, week: { start: "", tasks: 0 },
+      last: null, train: null, review: null, name: "", cls: "", test: null, lastTest: null, vpr: null };
   }
 
   function logout() {
@@ -794,6 +797,11 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
         '<thead><tr><th>Ученик</th><th>Класс</th><th>Решено</th><th>Прогресс</th><th>Оценка</th><th>Уровень</th><th>Серия</th><th>Обновлено</th></tr></thead>' +
         '<tbody id="admin-rows">' + rows + '</tbody></table></div></div>' +
       '<p class="note">Прогресс хранится локально в браузере каждого компьютера. Для сбора с других машин используйте страницу «Отчёт» и экспорт JSON.</p>' +
+      '<div class="card" style="margin-top:14px"><h3>Темы курса</h3>' +
+        '<p style="margin-top:8px"><a class="btn ghost" href="#/map">Карта курса</a> ' +
+        '<a class="btn ghost" href="#/tasks">Все задания</a> ' +
+        '<a class="btn ghost" href="#/plan">Программа и часы</a></p>' +
+      '</div>' +
     '</div>';
   }
 
@@ -1027,6 +1035,8 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       else if (KEY) hu.innerHTML = esc((state.name || "") + " · " + (state.cls || "")) + " · выйти";
       else hu.innerHTML = "Войти";
     }
+    var adminLink = document.querySelector(".mainnav a[href=\"#/admin\"]");
+    if (adminLink) adminLink.style.display = IS_ADMIN ? "" : "none";
   }
 
   function setNav(name) {
@@ -1809,13 +1819,17 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     var html = "", nav = "";
 
     var r = parse();
-    if (IS_ADMIN) {
+    if (IS_ADMIN && r.name === "admin") {
       html = viewAdmin();
       app.innerHTML = html;
-      setNav("");
+      setNav("admin");
       renderSide(null);
       paintHeader();
       window.scrollTo(0, 0);
+      return;
+    }
+    if (IS_ADMIN && !r.name) {
+      location.hash = "#/admin";
       return;
     }
     if (!KEY) {
@@ -1842,6 +1856,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       html = viewVpr(); nav = "";
     }
     else if (r.name === "report") { html = viewReport(); nav = "report"; }
+    else if (r.name === "admin") { html = viewAdmin(); nav = "admin"; }
     else if (r.name === "progress") { html = viewMyProgress(); nav = "progress"; }
     else if (r.name === "certificate") { html = viewCertificate(); nav = ""; }
     else { html = viewLesson(r.id, r.tab); nav = ""; }
@@ -1952,6 +1967,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       var err2 = document.getElementById("auth-err");
       if (lu === "admin" && pa === "admin") {
         enterAdmin();
+        location.hash = "#/map";
         render();
       } else {
         if (err2) err2.textContent = "Неверный логин или пароль. Попробуйте admin / admin.";
