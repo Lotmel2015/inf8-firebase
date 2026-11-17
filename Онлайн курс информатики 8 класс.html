@@ -1832,7 +1832,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       location.hash = "#/admin";
       return;
     }
-    if (!KEY) {
+    if (!IS_ADMIN && !KEY) {
       html = viewLogin();
       app.innerHTML = html;
       setNav("");
