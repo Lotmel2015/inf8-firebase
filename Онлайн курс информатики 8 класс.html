@@ -249,6 +249,7 @@ input[type="search"]{flex:1;min-width:180px}
 .plan-table th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
 .plan-table tr:last-child td{border-bottom:0}
 .note{font-size:13px;color:var(--muted);margin-top:10px}
+.mono{font-family:Consolas,"SF Mono",ui-monospace,monospace}
 
 @media (max-width:900px){
   .mods,.grid2{grid-template-columns:1fr}
@@ -668,14 +669,18 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
   }
 
   /* ── авторизация ───────────────────────────── */
-  function viewLogin() {
+  function viewLogin(showTeacher) {
     return '<div class="view auth-wrap">' +
       '<div class="auth-card">' +
         '<h1 class="page-h1">Вход в курс</h1>' +
-        '<div class="auth-tabs" role="tablist">' +
-          '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
-          '<button class="auth-tab" data-act="auth-role" data-role="teacher" aria-selected="false">Учитель</button>' +
-        '</div>' +
+        (showTeacher
+          ? '<div class="auth-tabs" role="tablist">' +
+            '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
+            '<button class="auth-tab" data-act="auth-role" data-role="teacher" aria-selected="false">Учитель</button>' +
+          '</div>'
+          : '<div class="auth-tabs" role="tablist">' +
+            '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
+          '</div>') +
         '<div class="auth-pane" data-pane="student">' +
           '<p class="lead">Введи личный код и класс — прогресс на этом компьютере сохранится автоматически.</p>' +
           '<label class="auth-label">Личный код</label>' +
@@ -694,6 +699,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
           '<div style="margin-top:14px"><button class="btn primary" data-act="admin-login" style="width:100%">Войти</button></div>' +
         '</div>' +
         '<p class="note" id="auth-err" aria-live="polite" style="color:#a12b2b;min-height:18px"></p>' +
+        (showTeacher ? '' : '<p class="note">Если вы учитель — откройте адрес курса с <span class="mono">#/teacher</span> в конце.</p>') +
       '</div>' +
     '</div>';
   }
@@ -1807,6 +1813,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     if (p[0] === "test") return { name: "test" };
     if (p[0] === "vpr") return { name: "vpr", id: p[1] || "" };
     if (p[0] === "report") return { name: "report" };
+    if (p[0] === "teacher") return { name: "teacher" };
     if (p[0] === "admin") return { name: "admin" };
     if (p[0] === "certificate") return { name: "certificate" };
     if (p[0] === "tasks") return { name: "tasks" };
@@ -1835,7 +1842,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       return;
     }
     if (!IS_ADMIN && !KEY) {
-      html = viewLogin();
+      html = viewLogin(r.name === "teacher");
       app.innerHTML = html;
       setNav("");
       renderSide(null);
@@ -1953,7 +1960,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
         if (err) err.textContent = "Код — 4–10 латинских букв, цифр и дефисов (например X7-K2P).";
         return;
       }
-      if (/^teacher$/i.test(nm)) {
+      if (/^teacher$/i.test(nm) || /^admin$/i.test(nm)) {
         if (err) err.textContent = "Для учителя используйте вкладку «Учитель».";
         return;
       }
