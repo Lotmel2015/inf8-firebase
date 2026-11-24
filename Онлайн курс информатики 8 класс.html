@@ -669,18 +669,14 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
   }
 
   /* ── авторизация ───────────────────────────── */
-  function viewLogin(showTeacher) {
+  function viewLogin() {
     return '<div class="view auth-wrap">' +
       '<div class="auth-card">' +
         '<h1 class="page-h1">Вход в курс</h1>' +
-        (showTeacher
-          ? '<div class="auth-tabs" role="tablist">' +
-            '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
-            '<button class="auth-tab" data-act="auth-role" data-role="teacher" aria-selected="false">Учитель</button>' +
-          '</div>'
-          : '<div class="auth-tabs" role="tablist">' +
-            '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
-          '</div>') +
+        '<div class="auth-tabs" role="tablist">' +
+          '<button class="auth-tab" data-act="auth-role" data-role="student" aria-selected="true">Ученик</button>' +
+          '<button class="auth-tab" data-act="auth-role" data-role="teacher" aria-selected="false">Учитель</button>' +
+        '</div>' +
         '<div class="auth-pane" data-pane="student">' +
           '<p class="lead">Введи личный код и класс — прогресс на этом компьютере сохранится автоматически.</p>' +
           '<label class="auth-label">Личный код</label>' +
@@ -699,7 +695,6 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
           '<div style="margin-top:14px"><button class="btn primary" data-act="admin-login" style="width:100%">Войти</button></div>' +
         '</div>' +
         '<p class="note" id="auth-err" aria-live="polite" style="color:#a12b2b;min-height:18px"></p>' +
-        (showTeacher ? '' : '<p class="note">Если вы учитель — откройте адрес курса с <span class="mono">#/teacher</span> в конце.</p>') +
       '</div>' +
     '</div>';
   }
@@ -1843,7 +1838,7 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
       return;
     }
     if (!IS_ADMIN && !KEY) {
-      html = viewLogin(r.name === "teacher");
+      html = viewLogin();
       app.innerHTML = html;
       setNav("");
       renderSide(null);
