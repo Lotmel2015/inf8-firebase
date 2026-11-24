@@ -844,12 +844,19 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
   }
 
   function normBase(s) {
-    return String(s).toLowerCase().replace(/ё/g, "е")
-      .replace(/[₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "")
-      .replace(/\(2\)|\(8\)|\(16\)|\(10\)|_2|_8|_16/gi, "")
+    var normMinus = function (x) {
+      return String(x).toLowerCase().replace(/ё/g, "е")
+        .replace(/[—–−‑]/g, "-")
+        .replace(/[₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "")
+        .replace(/\(2\)|\(8\)|\(16\)|\(10\)|_2|_8|_16/gi, "");
+    };
+    var a = normMinus(s)
       .replace(/[«»"'`]/g, "")
       .replace(/\s+/g, "")
-      .replace(/[.,;:!?]+$/g, "");
+      .replace(/[.,;:!?)]+$/g, "")
+      .replace(/^от/, "")
+      .replace(/до|\.\.\.|…/g, "~");
+    return a;
   }
 
   function fmtHint(t) {
@@ -872,6 +879,17 @@ main{max-width:900px;margin:0;padding:28px 34px 90px}
     var n1 = parseFloat(String(val).replace(",", "."));
     var n2 = parseFloat(String(t.k || "").replace(",", "."));
     if (!isNaN(n1) && !isNaN(n2) && Math.abs(n1 - n2) < 1e-9) return true;
+    // диапазоны: "от -128 до 127" ~ "-128~127" — сравниваем по числам
+    if (a.indexOf("~") !== -1 && b.indexOf("~") !== -1) {
+      var r1 = a.split("~"), r2 = b.split("~");
+      if (r1.length === 2 && r2.length === 2) {
+        var x1 = parseFloat(r1[0]), y1 = parseFloat(r1[1]);
+        var x2 = parseFloat(r2[0]), y2 = parseFloat(r2[1]);
+        if (!isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+          return Math.abs(x1 - x2) < 1e-9 && Math.abs(y1 - y2) < 1e-9;
+        }
+      }
+    }
     return false;
   }
   function todayStr() {
